@@ -1,0 +1,14 @@
+{
+  "require": {
+    "php": "^7.2",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Ibd\\": "./src/"
+    }
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^5.2"
+  }
+}
