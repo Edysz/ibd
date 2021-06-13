@@ -2,12 +2,24 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL | E_STRICT);
 
+if(session_status() != PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 define('ROK_AKADEMICKI', (date('Y') - 1) . '/' . date('Y'));
 
 require_once 'vendor/autoload.php';
 
+use Ibd\Koszyk;
 use Ibd\Menu;
 
+$koszyk = new Koszyk();
+
+$liczbaKsiazekWKoszyku = 0;
+foreach ($koszyk->pobierzWszystkie() as $ksiazkaWKoszyku) {
+    $liczbaKsiazekWKoszyku += $ksiazkaWKoszyku['liczba_sztuk'];
+}
+$koszykHtml = "<span class='badge badge-dark' id='wKoszyku'>$liczbaKsiazekWKoszyku</span>";
 ?>
 
 <!DOCTYPE html>
@@ -37,6 +49,10 @@ use Ibd\Menu;
                 <ul class="navbar-nav mt-2 mt-lg-0">
 					<?= Menu::generujOpcje('index.php', 'Strona główna') ?>
                     <?= Menu::generujOpcje('ksiazki.lista.php', 'Książki') ?>
+                    <?= Menu::generujOpcje('koszyk.lista.php', "Koszyk $koszykHtml") ?>
+                    <?php if (!empty($_SESSION['id_uzytkownika'])): ?>
+                        <?= Menu::generujOpcje('zamowienia.lista.php', "Historia zamówień") ?>
+                    <?php endif; ?>
                 </ul>
             </div>
         </nav>
@@ -44,4 +60,4 @@ use Ibd\Menu;
 	
     <div class="container">
         <div class="row">
-            <div class="col-md-10"> 
+            <div class="col-md-9">

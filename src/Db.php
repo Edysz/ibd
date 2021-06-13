@@ -12,7 +12,7 @@ class Db
      * Dane dostępowe do bazy.
      */
     private string $dbLogin = 'root';
-    private string $dbPassword = 'admin';
+    private string $dbPassword = '';
     private string $dbHost = 'localhost';
     private string $dbName = 'ibd';
 
@@ -29,9 +29,9 @@ class Db
      *
      * @param            $sql    string Zapytanie SQL
      * @param array|null $params Tablica z parametrami zapytania
-     * @return array Tablica z danymi, false jeśl nie udało się wysłać zapytania
+     * @return array Tablica z danymi
      */
-    public function pobierzWszystko(string $sql, ?array $params = null): ?array
+    public function pobierzWszystko(string $sql, ?array $params = null): array
     {
         $stmt = $this->pdo->prepare($sql);
 
@@ -40,7 +40,11 @@ class Db
                 $stmt->bindParam($k, $v);
         }
 
-        return $stmt->execute() ? $stmt->fetchAll() : null;
+        if (!$stmt->execute()) {
+            throw new \RuntimeException("Failed to execute [$sql] {$stmt->errorInfo()[2]}");
+        }
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -55,6 +59,106 @@ class Db
         $sql = "SELECT * FROM $table WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
 
-        return $stmt->execute([':id' => $id]) ? $stmt->fetch() : null;
+        return $stmt->execute([':id' => $id]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
+    }
+
+    /**
+     * Liczy rekordy zwrócone przez zapytanie.
+     *
+     * @param string $sql
+     * @param array  $params
+     * @return int
+     */
+    public function policzRekordy(string $sql, array $params = []): int
+    {
+        $stmt = $this->pdo->prepare($sql);
+
+        if (!empty($params) && is_array($params)) {
+            foreach($params as $k => $v) {
+                $stmt->bindParam($k, $v);
+            }
+        }
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Dodaje rekord o podanych parametrach do wybranej tabeli.
+     *
+     * @param string $tabela
+     * @param array  $params
+     * @return int
+     */
+    public function dodaj(string $tabela, array $params): int
+    {
+        $klucze = array_keys($params);
+        $sql = "INSERT INTO $tabela (";
+        $sql .= implode(', ', $klucze);
+        $sql .= ") VALUES (";
+
+        array_walk($klucze, function(&$elem, $klucz) {
+            $elem = ":$elem";
+        });
+        $sql .= implode(', ', $klucze);
+        $sql .= ")";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $this->pdo->lastInsertId();
+    }
+
+    /**
+     * Usuwa rekord o podanym id z wybranej tabeli.
+     *
+     * @param string $tabela
+     * @param int    $id
+     * @return bool
+     */
+    public function usun(string $tabela, int $id): bool
+    {
+        $sql = "DELETE FROM $tabela WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Aktualizuje rekord w wybranej tabeli o podanym id.
+     *
+     * @param string $tabela
+     * @param array  $params
+     * @param int    $id
+     * @return bool
+     */
+    public function aktualizuj(string $tabela, array $params, int $id): bool
+    {
+        $sql = "UPDATE $tabela SET ";
+        foreach ($params as $k => $v) {
+            $sql .= "$k = :$k, ";
+        }
+
+        $sql = substr($sql, 0, -2);
+        $sql .= " WHERE id = :id";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $params['id'] = $id;
+        return $stmt->execute($params);
+    }
+
+    /**
+     * Wykonuje podane zapytanie SQL z parametrami.
+     *
+     * @param string $sql
+     * @param array  $params
+     * @return bool
+     */
+    public function wykonaj(string $sql, array $params = []): bool
+    {
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute($params);
     }
 }

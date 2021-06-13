@@ -14,35 +14,47 @@ use Ibd\Ksiazki;
 
 $ksiazki = new Ksiazki();
 $dane = $ksiazki->pobierz($id);
-
 ?>
 
-<h2><?=$dane['tytul']?></h2>
+<div class="row">
+    <div class="col-4 p-4 text-center">
+        <?php if (!empty($dane['zdjecie'])) : ?>
+            <img src="zdjecia/<?= $dane['zdjecie'] ?>" alt="<?= $dane['tytul'] ?>" class="img-thumbnail" />
+        <?php else : ?>
+            brak zdjęcia
+        <?php endif; ?>
+        <br />
+        <br />
+        <h2><?=$dane['tytul']?></h2>
+    </div>
+    <div class="col-8 p-4">
+        <table class="table">
+            <tr>
+                <td>Id</td>
+                <td> <?= $dane['id'] ?> </td>
+            </tr>
+            <tr>
+                <td>Liczba stron</td>
+                <td> <?= $dane['liczba_stron'] ?> </td>
+            </tr>
+            <tr>
+                <td>Isbn</td>
+                <td> <?= $dane['isbn'] ?> </td>
+            </tr>
+            <tr>
+                <td>Cena</td>
+                <td> <?= $dane['cena'] ?> </td>
+            </tr>
+            <tr>
+                <td>Opis</td>
+                <td> <?= $dane['opis'] ?> </td>
+            </tr>
+        </table>
+    </div>
+</div>
 
 <p>
 	<a href="ksiazki.lista.php"><i class="fas fa-chevron-left"></i> Powrót</a>
 </p>
-
-
-<p> 
-<b>Tytuł</b>: <?= $dane['tytul']?>
-<br>
-<b>Opis</b>: <?= $dane['opis']?>
-<br>
-<b>Liczba Stron</b>: <?= $dane['liczba_stron']?>
-<br>
-<b>Cena</b>: <?= $dane['cena']?>
-<br>
-<b>ISBN</b>: <?= $dane['isbn']?>
-<br>
-</p>
-				
-<p> 
-
-<img src="zdjecia/<?= $dane['zdjecie']?>" style="width: 300px"/> 
-
-</p>
-					
-						
 
 <?php include 'footer.php'; ?>
