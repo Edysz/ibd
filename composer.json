@@ -2,8 +2,9 @@
   "name": "wit/ibd",
   "description": "Projekt Internetowe Bazy Danych",
   "require": {
-    "php": "^8.0.3",
+    "php": "^7.4",
     "ext-pdo": "*",
+    "ext-gd": "*",
     "vlucas/valitron": "^1.4"
   },
   "autoload": {

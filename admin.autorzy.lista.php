@@ -3,18 +3,17 @@
 require_once 'vendor/autoload.php';
 
 use Ibd\Autorzy;
-
+use Ibd\Stronicowanie;
 $autorzy = new Autorzy();
-$zapytanie = $autorzy->pobierzSelect($_GET);
+$select = $autorzy->pobierzSelect($_GET);
+//$lista = $autorzy->pobierzWszystko();
+
 
 // dodawanie warunków stronicowania i generowanie linków do stron
-$stronicowanie = new \Ibd\Stronicowanie($_GET, $zapytanie['parametry']);
-$podsumowanieListy = $stronicowanie->pobierzPodsumowanie($zapytanie['sql']);
-$linki = $stronicowanie->pobierzLinki($zapytanie['sql'], 'admin.autorzy.lista.php');
-$select = $stronicowanie->dodajLimit($zapytanie['sql']);
-
-$lista = $autorzy->pobierzWszystko($select, $zapytanie['parametry']);
-
+$stronicowanie = new Stronicowanie($_GET, $select['parametry']);
+$linki = $stronicowanie->pobierzLinki($select['sql'], 'admin.autorzy.lista.php');
+$zapytanie = $stronicowanie->dodajLimit($select['sql']);
+$lista = $autorzy->pobierzStrone($zapytanie, $select['parametry']);
 include 'admin.header.php';
 ?>
 
@@ -22,23 +21,19 @@ include 'admin.header.php';
     Autorzy
     <small><a href="admin.autorzy.dodaj.php">dodaj</a></small>
 </h2>
-
-<?php if (isset($_GET['msg']) && $_GET['msg'] == 1): ?>
-    <p class="alert alert-success">Autor został dodany.</p>
-<?php endif; ?>
     <form method="get" action="" class="form-inline mb-4">
-        <input type="text" name="szukaj" placeholder="szukaj" class="form-control form-control-sm mr-2"
-               value="<?= $_GET['szukaj'] ?? '' ?>" autocomplete="off"/>
+        <input type="text" name="fraza" placeholder="szukaj" class="form-control form-control-sm mr-2"
+               value="<?= $_GET['fraza'] ?? '' ?>"/>
 
         <select name="sortowanie" id="sortowanie" class="form-control form-control-sm mr-2">
             <option value="">sortowanie</option>
             <option value="a.nazwisko ASC"
-                <?= ($_GET['sortowanie'] ?? '') == 'a.nazwisko ASC' ? 'selected' : '' ?>
-            >Nazwiksu rosnąco
+                <?= ($_GET['sortowanie'] ?? '') == 'nazwisko ASC' ? 'selected' : '' ?>
+            >nazwisku rosnąco
             </option>
             <option value="a.nazwisko DESC"
-                <?= ($_GET['sortowanie'] ?? '') == 'a.nazwisko DESC' ? 'selected' : '' ?>
-            >Nazwisku malejąco
+                <?= ($_GET['sortowanie'] ?? '') == 'nazwisko DESC' ? 'selected' : '' ?>
+            >nazwisku malejąco
             </option>
         </select>
 
@@ -46,6 +41,9 @@ include 'admin.header.php';
     </form>
 
 
+<?php if (isset($_GET['msg']) && $_GET['msg'] == 1): ?>
+    <p class="alert alert-success">Autor został dodany.</p>
+<?php endif; ?>
 
 <table id="autorzy" class="table table-striped">
     <thead>
@@ -54,7 +52,7 @@ include 'admin.header.php';
             <th>Imię</th>
             <th>Nazwisko</th>
             <th>Liczba książek</th>
-            <th>&nbsp;</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -63,23 +61,17 @@ include 'admin.header.php';
                 <td><?= $a['id'] ?></td>
                 <td><?= $a['imie'] ?></td>
                 <td><?= $a['nazwisko'] ?></td>
-                <td><?= $a['liczba'] ?></td>
+                <td><?= $autorzy->liczbaKsiazek($a['id'])?></td>
                 <td>
                     <a href="admin.autorzy.edycja.php?id=<?= $a['id'] ?>" title="edycja" class="aEdytujAutora"><em class="fas fa-pencil-alt"></em></a>
-                    <?php if($a['liczba'] == 0): ?>
-                    <a href="admin.autorzy.usun.php?id=<?= $a['id'] ?>" title="usuń" class="aUsunAutora"><em class="fas fa-trash"></em></a>
+                    <?php if ($autorzy->liczbaKsiazek($a['id']) <= 0): ?><a href="admin.autorzy.usun.php?id=<?= $a['id'] ?>" title="usuń" class="aUsunAutora"><em class="fas fa-trash"></em></a>
                     <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
-<div class="p-2">
-    <?= $podsumowanieListy ?>
-</div>
-<nav class="text-center">
-    <?= $linki ?>
-</nav>
-
-
+    <nav class="text-center">
+        <?= $linki ?>
+    </nav>
 <?php include 'admin.footer.php'; ?>

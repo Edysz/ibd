@@ -16,28 +16,16 @@ class Autorzy
 	 *
 	 * @return string
      */
-	public function pobierzSelect(array $params): array
+	public function pobierzSelect(array $params = []): array
     {
-        $sql = "
-            SELECT a.id, a.imie, a.nazwisko, COUNT(*) as liczba
-            FROM autorzy a  
-                LEFT JOIN ksiazki k on a.id = k.id_autora
-            WHERE 1=1 ";
-
-        // dodawanie warunków do zapytanie
         $parametry = [];
-        if (!empty($params['szukaj'])) {
-            $czesciFrazy = [];
-            foreach (['a.nazwisko', 'a.imie'] as $kolumna){
-                $nazwaParametru = "param_" . (count($parametry) + 1);
-                $czesciFrazy[] = "$kolumna LIKE :{$nazwaParametru}";
-                $parametry[$nazwaParametru] = "%{$params['szukaj']}%";
-            }
-            $sqlFrazy = implode(' OR ', $czesciFrazy);
-            $sql .= "AND ($sqlFrazy)";
+        $sql = "SELECT * FROM autorzy AS a WHERE 1=1 ";
+        // dodawanie warunków do zapytanie
+        if (!empty($params['fraza'])) {
+            $sql .= "AND CONCAT(a.imie,' ', a.nazwisko) LIKE :fraza ";
+            $parametry['fraza'] = "%$params[fraza]%";
         }
 
-        $sql .= 'GROUP BY 1,2,3';
         // dodawanie sortowania
         if (!empty($params['sortowanie'])) {
             $kolumny = ['a.nazwisko'];
@@ -48,7 +36,6 @@ class Autorzy
                 $sql .= " ORDER BY " . $params['sortowanie'];
             }
         }
-
         return ['sql' => $sql, 'parametry' => $parametry];
 	}
 
@@ -58,9 +45,9 @@ class Autorzy
 	 * @param string $select
 	 * @return array
 	 */
-	public function pobierzWszystko(string $select, array $parametry): array
+	public function pobierzWszystko(string $select): array
     {
-		return $this->db->pobierzWszystko($select, $parametry);
+		return $this->db->pobierzWszystko($select);
 	}
 
 	/**
@@ -73,6 +60,19 @@ class Autorzy
     {
 		return $this->db->pobierz('autorzy', $id);
 	}
+
+
+    /**
+     * Pobiera stronę z danymi autorów.
+     *
+     * @param string $select
+     * @param array  $params
+     * @return array
+     */
+    public function pobierzStrone(string $select, array $params = []): array
+    {
+        return $this->db->pobierzWszystko($select, $params);
+    }
 
 	/**
 	 * Dodaje autora.
@@ -96,10 +96,7 @@ class Autorzy
 	 */
 	public function usun(int $id): bool
     {
-		if(!empty($this->pobierzWszystko('SELECT * FROM ksiazki WHERE id_autora = :idAutora', ['idAutora' => $id]))){
-		    return false;
-        }
-        return $this->db->usun('autorzy', $id);
+		return $this->db->usun('autorzy', $id);
 	}
 
 	/**
@@ -119,4 +116,16 @@ class Autorzy
 		return $this->db->aktualizuj('autorzy', $update, $id);
 	}
 
+
+    /**
+     * Zwraca ile książek napisał dany autor.
+     * @param int $id
+     * @return int
+     */
+	public function liczbaKsiazek(int $id): int
+    {
+        return $this->db->sprawdz_liczbe_ksiazek($id);
+    }
 }
+
+

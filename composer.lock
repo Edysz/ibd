@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "486ad219a915d59a2b67de079c20741d",
+    "content-hash": "39d261c47c0d5ecfdd8e629745150175",
     "packages": [
         {
             "name": "vlucas/valitron",
@@ -325,9 +325,9 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.0.3",
+        "php": "^7.4",
         "ext-pdo": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }

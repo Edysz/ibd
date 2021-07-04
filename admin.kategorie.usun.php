@@ -6,10 +6,10 @@ session_start();
 
 require_once 'vendor/autoload.php';
 
-use Ibd\Autorzy;
+use Ibd\Kategorie;
 
 if(isset($_POST)) {
-	$kategorie = new \Ibd\Kategorie();
+	$kategorie = new Kategorie();
 	if($kategorie->usun($_GET['id']))
 		echo 'ok';
 }

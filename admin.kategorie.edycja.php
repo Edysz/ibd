@@ -2,14 +2,16 @@
 
 require_once 'vendor/autoload.php';
 
+use Ibd\Kategorie;
+
 if(empty($_GET['id'])) {
-    header("Location: admin.autorzy.lista.php");
+    header("Location: admin.kategorie.lista.php");
     exit();
 } else {
     $id = (int)$_GET['id'];
 }
 
-$kategorie = new \Ibd\Kategorie();
+$kategorie = new Kategorie();
 
 if(!empty($_POST)) {
    if($kategorie->edytuj($_POST, $id)) {
@@ -33,11 +35,10 @@ $dane = $kategorie->pobierz($id);
 <?php endif; ?>
 
 <form method="post" action="" class="">
-	<div class="form-group">
-		<label for="nazwa">Nazwa</label>
+    <div class="form-group">
+		<label for="nazwa">Nazwa kategorii</label>
 		<input type="text" id="nazwa" name="nazwa" class="form-control" value="<?=$dane['nazwa'] ?>" />
 	</div>
-
 	<button type="submit" class="btn btn-primary">Zapisz</button>
 
 </form>

@@ -31,12 +31,12 @@ class Db
      * @param array|null $params Tablica z parametrami zapytania
      * @return array Tablica z danymi
      */
-    public function pobierzWszystko(string $sql, ?array $params = null): array
+    public function pobierzWszystko(string $sql, ?array $params = null): ?array
     {
         $stmt = $this->pdo->prepare($sql);
 
         if (!empty($params) && is_array($params)) {
-            foreach ($params as $k => $v)
+            foreach ($params as $k => &$v)
                 $stmt->bindParam($k, $v);
         }
 
@@ -58,7 +58,19 @@ class Db
     {
         $sql = "SELECT * FROM $table WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([':id' => $id]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
+    }
 
+    /**
+     * Pobiera dane książki o podanym ID z koszyka
+     * @param string $table
+     * @param int $id
+     * @return array|null
+     */
+    public function pobierzKsiazkeZKoszyka(string $table, int $id): ?array
+    {
+        $sql = "SELECT * FROM $table WHERE id_ksiazki = :id";
+        $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([':id' => $id]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
     }
 
@@ -143,7 +155,7 @@ class Db
         $sql .= " WHERE id = :id";
 
         $stmt = $this->pdo->prepare($sql);
-
+        //dd($params);
         $params['id'] = $id;
         return $stmt->execute($params);
     }
@@ -160,5 +172,66 @@ class Db
         $stmt = $this->pdo->prepare($sql);
 
         return $stmt->execute($params);
+    }
+
+    /**
+     * Sprawdza czy użytkownik o danym loginie istnieje
+     */
+
+    public function sprawdz_login(string $login)
+    {
+        $sql = "SELECT count(*) as czy_istnieje FROM uzytkownicy WHERE login = :login";
+        $stmt = $this->pdo->prepare($sql);
+
+        $result = $stmt->execute([':login' => $login]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
+        return $result['czy_istnieje'];
+    }
+
+    /**
+     * Sprawdza czy użytkownik o danym emailu istnieje
+     */
+
+    public function sprawdz_email(string $email)
+    {
+        $sql = "SELECT count(*) as czy_istnieje FROM uzytkownicy WHERE email = :email";
+        $stmt = $this->pdo->prepare($sql);
+
+        $result = $stmt->execute([':email' => $email]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
+        return $result['czy_istnieje'];
+    }
+
+    /**
+     * Sprawdza ile książek napisał dany autor.
+     * @param int $id
+     * @return int|mixed
+     */
+    public function sprawdz_liczbe_ksiazek(int $id)
+    {
+        $sql = "SELECT id_autora, count(*) as liczba_ksiazek FROM ksiazki WHERE id_autora = :id GROUP BY id_autora";
+        $stmt = $this->pdo->prepare($sql);
+
+        $result = $stmt->execute([':id' => $id]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : 0;
+        if(isset($result['liczba_ksiazek']))
+            return $result['liczba_ksiazek'];
+        else
+            return 0;
+    }
+
+
+    /**
+     * Sprawdza liczbę książek w danej kategorii.
+     * @param int $id
+     * @return int|mixed
+     */
+    public function sprawdz_liczbe_ksiazek_w_kategorii(int $id)
+    {
+        $sql = "SELECT id_kategorii, count(*) as liczba_ksiazek FROM ksiazki WHERE id_kategorii = :id GROUP BY id_kategorii";
+        $stmt = $this->pdo->prepare($sql);
+
+        $result = $stmt->execute([':id' => $id]) ? $stmt->fetch(\PDO::FETCH_ASSOC) : 0;
+        if(isset($result['liczba_ksiazek']))
+            return $result['liczba_ksiazek'];
+        else
+            return 0;
     }
 }

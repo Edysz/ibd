@@ -12,13 +12,12 @@ $listaKategorii = $kategorie->pobierzWszystkie();
 // pobieranie książek
 $ksiazki = new Ksiazki();
 $zapytanie = $ksiazki->pobierzZapytanie($_GET);
-
 // dodawanie warunków stronicowania i generowanie linków do stron
 $stronicowanie = new Stronicowanie($_GET, $zapytanie['parametry']);
-$podsumowanieListy = $stronicowanie->pobierzPodsumowanie($zapytanie['sql']);
 $linki = $stronicowanie->pobierzLinki($zapytanie['sql'], 'ksiazki.lista.php');
 $select = $stronicowanie->dodajLimit($zapytanie['sql']);
 $lista = $ksiazki->pobierzStrone($select, $zapytanie['parametry']);
+
 ?>
 
     <h1>Książki</h1>
@@ -27,7 +26,7 @@ $lista = $ksiazki->pobierzStrone($select, $zapytanie['parametry']);
         <input type="text" name="fraza" placeholder="szukaj" class="form-control form-control-sm mr-2"
                value="<?= $_GET['fraza'] ?? '' ?>"/>
 
-        <label for="id_kategorii"></label><select name="id_kategorii" id="id_kategorii" class="form-control form-control-sm mr-2">
+        <select name="id_kategorii" id="id_kategorii" class="form-control form-control-sm mr-2">
             <option value="">kategoria</option>
 
             <?php foreach ($listaKategorii as $kat): ?>
@@ -81,18 +80,18 @@ $lista = $ksiazki->pobierzStrone($select, $zapytanie['parametry']);
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($lista as $ks) : ?>
+        <?php foreach ($lista as $ks): ?>
             <tr>
                 <td style="width: 100px">
-                    <?php if (!empty($ks['zdjecie'])) : ?>
+                    <?php if (!empty($ks['zdjecie'])): ?>
                         <img src="zdjecia/<?= $ks['zdjecie'] ?>" alt="<?= $ks['tytul'] ?>" class="img-thumbnail"/>
-                    <?php else : ?>
+                    <?php else: ?>
                         brak zdjęcia
                     <?php endif; ?>
                 </td>
                 <td><?= $ks['tytul'] ?></td>
-                <td><?= $ks['nazwisko'] ?> <?= $ks['imie'] ?></td>
-                <td><?= $ks['nazwa'] ?></td>
+                <td><?= $ks['autor']?></td>
+                <td><?= $ks['kategoria'] ?></td>
                 <td><?= $ks['cena'] ?></td>
                 <td>
                     <a href="koszyk.dodaj.php?id=<?=$ks['id'] ?>" title="dodaj do koszyka" class="aDodajDoKoszyka">
@@ -106,9 +105,7 @@ $lista = $ksiazki->pobierzStrone($select, $zapytanie['parametry']);
         <?php endforeach; ?>
         </tbody>
     </table>
-    <div class="p-2">
-        <?= $podsumowanieListy ?>
-    </div>
+
     <nav class="text-center">
         <?= $linki ?>
     </nav>

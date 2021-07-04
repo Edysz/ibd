@@ -48,27 +48,86 @@ class Zamowienia
         }
     }
 
-    public function pobierzZamowienia(): array
+    /**
+     * Pobiera wszystkie zamówienia.
+     *
+     * @return array
+     */
+    public function pobierzWszystkie(): array
     {
-        $sql = "SELECT *, s.cena as cena_zamowienia_ksiazki FROM zamowienia z 
-                    LEFT JOIN zamowienia_szczegoly s on z.id = s.id_zamowienia
-                    LEFT JOIN ksiazki k on s.id_ksiazki = k.id
-                    LEFT JOIN zamowienia_statusy st on z.id_statusu = st.id
-                WHERE z.id_uzytkownika = :id_uzytkownika";
+        $sql = "
+			SELECT z.*, u.login, s.nazwa AS status,
+			ROUND(SUM(sz.cena*sz.liczba_sztuk), 2) AS suma,
+			COUNT(sz.id) AS liczba_produktow,
+			SUM(sz.liczba_sztuk) AS liczba_sztuk
+			FROM zamowienia z JOIN uzytkownicy u ON z.id_uzytkownika = u.id
+			JOIN zamowienia_statusy s ON z.id_statusu = s.id
+			JOIN zamowienia_szczegoly sz ON z.id = sz.id_zamowienia
+			GROUP BY z.id
+	    ";
 
-        $rekordy = $this->db->pobierzWszystko($sql, ['id_uzytkownika' => $_SESSION['id_uzytkownika']]);
+        return $this->db->pobierzWszystko($sql);
+    }
 
-        $zamowienia = [];
+    /**
+     * Pobiera szczegóły zamówienia o podanym ID.
+     * @param $id id zamówienia
+     * @return array szczegóły zamówienia
+     */
+    public function pobierzSzczegoly($id): array
+    {
+        $sql = "
+			SELECT *
+			FROM zamowienia_szczegoly
+			WHERE id_zamowienia = '" . $id . "'
+			ORDER BY id_ksiazki DESC";
+        return $this->db->pobierzWszystko($sql);
+    }
 
-        foreach ($rekordy as $rekord) {
-            if(!isset($zamowienia[$rekord['id_zamowienia']])){
-                $zamowienia[$rekord['id_zamowienia']] = $rekord;
-            }
-            $zamowienia[$rekord['id_zamowienia']]['szczegoly'][] = $rekord;
+    /**
+     * Pobiera dane ogólne zamówienia o podanym id
+     * @param $id
+     * @return array
+     */
+    public function pobierzZamowienie($id): array
+    {
+        return $this->db->pobierz('zamowienia', $id);
+    }
 
-        }
+    /**
+     *
+     */
+    public function pobierzStatus($id): string
+    {
+        $result = $this->db->pobierz('zamowienia_statusy', $id);
+        return $result['nazwa'];
+    }
 
-        return $zamowienia;
+    /**
+     * Zmienia status zamowienia.
+     *
+     * @param array $dane
+     * @param int   $id
+     * @return bool
+     */
+    public function edytuj(array $dane, int $id): bool
+    {
+        $update = [
+            'id_statusu' => $dane['id_statusu']
+             ];
+        return $this->db->aktualizuj('zamowienia', $update, $id);
+    }
+
+    /**
+     * Pobiera wszystkie statusy.
+     *
+     * @return array
+     */
+    public function pobierzWszystkieStatusy(): array
+    {
+        $sql = "SELECT * FROM zamowienia_statusy";
+
+        return $this->db->pobierzWszystko($sql);
     }
 
 }
